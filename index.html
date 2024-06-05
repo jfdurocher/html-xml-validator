@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+  }
+  .container {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  .lineNumbers {
+    width: 40px;
+    padding: 10px;
+    border-right: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 20px;
+    color: #999;
+  }
+  .lineNumbers pre {
+    margin: 0;
+  }
+  .xmlInput {
+    flex: 1;
+    padding: 10px;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 20px;
+    resize: none;
+    border: none;
+    outline: none;
+    overflow: hidden;
+    white-space: pre-wrap;
+    background-color: #f8f8f8;
+    color: #333;
+  }
+  .error {
+    color: red;
+  }
+</style>
+</head>
+<body>
+
+<div class="buttonContainer">
+  <button id="validateButton">Validate XML</button>
+  <button id="saveButton">Save As</button>
+</div>
+
+<div class="container">
+  <div class="lineNumbers" id="lineNumbersXml"><pre></pre></div>
+  <textarea id="xmlInput" class="xmlInput" placeholder="Enter XML here..."></textarea>
+</div>
+
+<div id="validationResult"></div>
+<div id="sizeCounter"></div>
+
+<script>
+  const xmlInput = document.getElementById('xmlInput');
+  const lineNumbersXml = document.getElementById('lineNumbersXml').querySelector('pre');
+  const validateButton = document.getElementById('validateButton');
+  const saveButton = document.getElementById('saveButton');
+  const validationResult = document.getElementById('validationResult');
+  const sizeCounter = document.getElementById('sizeCounter');
+
+  xmlInput.addEventListener('input', function() {
+    updateLineNumbers(xmlInput, lineNumbersXml);
+    resizeTextarea(xmlInput);
+    updateSizeCounter();
+  });
+
+  function resizeTextarea(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  }
+
+  function updateSizeCounter() {
+    const xmlString = xmlInput.value.trim();
+    const bytes = new Blob([xmlString]).size;
+    const megabytes = bytes / (1024 * 1024);
+    sizeCounter.textContent = `Size: ${bytes} bytes (${megabytes.toFixed(2)} MB)`;
+  }
+
+  validateButton.addEventListener('click', function() {
+    const xmlString = xmlInput.value.trim();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+    if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+      const parserError = xmlDoc.getElementsByTagName('parsererror')[0].textContent;
+      validationResult.textContent = 'Invalid XML: ' + parserError;
+      validationResult.className = 'error';
+    } else {
+      validationResult.textContent = 'Valid XML';
+      validationResult.className = 'valid';
+    }
+  });
+
+  saveButton.addEventListener('click', function() {
+    const xmlString = xmlInput.value.trim();
+    const blob = new Blob([xmlString], { type: 'application/xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.xml';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  function updateLineNumbers(input, lineNumbers) {
+    const lines = input.value.split('\n');
+    let lineNumbersContent = '';
+    for (let i = 1; i <= lines.length; i++) {
+      lineNumbersContent += i + '\n';
+    }
+    lineNumbers.textContent = lineNumbersContent;
+  }
+</script>
+
+</body>
+</html>
