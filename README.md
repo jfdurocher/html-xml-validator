@@ -1,2 +1,2 @@
 # html-xml-validator
-Simple HTML standalone XML validator
+Simple HTML standalone XML validator.
